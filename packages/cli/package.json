@@ -1,0 +1,27 @@
+{
+  "name": "@mangia/cli",
+  "type": "module",
+  "version": "0.0.1",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "bin": {
+    "mangia": "./dist/index.mjs"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch"
+  },
+  "dependencies": {
+    "citty": "^0.2.2",
+    "consola": "^3.4.2",
+    "pathe": "^2.0.3"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@mangia/kit",
+  "type": "module",
+  "version": "0.0.1",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch"
+  },
+  "dependencies": {
+    "@mangia/schema": "workspace:*",
+    "c12": "^4.0.0-beta.5",
+    "defu": "^6.1.7",
+    "hookable": "^6.1.1",
+    "pathe": "^2.0.3",
+    "tinyglobby": "^0.2.17",
+    "unrouting": "^0.1.7"
+  }
+}

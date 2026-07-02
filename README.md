@@ -13,7 +13,7 @@ Mangia is a free and open-source meta-framework designed to provide an intuitive
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/adrian-ub/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/adrian-ub/static/sponsors.svg'/>
+    <img src='https://cdn.jsdelivr.net/gh/adrian-ub/static/sponsors.svg' alt='Sponsors'/>
   </a>
 </p>
 

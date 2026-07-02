@@ -5,6 +5,8 @@
 *.log
 *.tgz
 *.local
+.mangia
+.turbo
 cache
 coverage
 dist
@@ -12,3 +14,4 @@ lib-cov
 logs
 node_modules
 temp
+.output

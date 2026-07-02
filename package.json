@@ -10,6 +10,8 @@
   },
   "bugs": "https://github.com/adrian-ub/mangia/issues",
   "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev --parallel",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "prepare": "git config core.hooksPath .githooks && simple-git-hooks"
@@ -18,7 +20,9 @@
     "@antfu/eslint-config": "^9.1.0",
     "eslint": "^10.5.0",
     "nano-staged": "^1.0.2",
-    "simple-git-hooks": "^2.13.1"
+    "simple-git-hooks": "^2.13.1",
+    "tsdown": "^0.22.3",
+    "turbo": "^2.5.0"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm run lint:fix"
