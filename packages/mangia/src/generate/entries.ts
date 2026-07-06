@@ -1,4 +1,4 @@
-import { resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import type { MangiaHead } from '@mangia/schema'
 
 export function generateEntryClient(
@@ -6,12 +6,13 @@ export function generateEntryClient(
   css: string[],
   rootDir: string,
   srcDir: string,
+  buildDir: string,
 ): string {
-  const cssImports = css.map(f => `import '${resolve(rootDir, f.replace(/^~\//, srcDir + '/'))}';`).join('\n')
+  const cssImports = css.map(f => `import '${relative(buildDir, resolve(rootDir, f.replace(/^~\//, srcDir + '/')))}';`).join('\n')
 
   return [
     "import { bootstrapApplication } from '@angular/platform-browser';",
-    "import { appConfig } from 'virtual:naxt/app-config';",
+    "import { appConfig } from 'virtual:mangia/app-config';",
     `import * as __module from '/${appComponent}';`,
     cssImports,
     '',
@@ -35,16 +36,17 @@ export function generateEntryServer(
   css: string[],
   rootDir: string,
   srcDir: string,
+  buildDir: string,
   head: MangiaHead | undefined,
 ): string {
   const title = head?.title ? escapeHtml(head.title) : ''
-  const cssImports = css.map(f => `import '${resolve(rootDir, f.replace(/^~\//, srcDir + '/'))}';`).join('\n')
+  const cssImports = css.map(f => `import '${relative(buildDir, resolve(rootDir, f.replace(/^~\//, srcDir + '/')))}';`).join('\n')
 
   return [
     "import { reflectComponentType, mergeApplicationConfig } from '@angular/core';",
     "import { bootstrapApplication } from '@angular/platform-browser';",
     '',
-    "import { appConfig } from 'virtual:naxt/app-config';",
+    "import { appConfig } from 'virtual:mangia/app-config';",
     `import * as __module from '/${appComponent}';`,
     '',
     "import clientAssets from './entry-client?assets=client';",

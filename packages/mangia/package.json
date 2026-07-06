@@ -23,6 +23,7 @@
     "dev": "tsdown --watch"
   },
   "dependencies": {
+    "@mangia/cli": "workspace:*",
     "@mangia/kit": "workspace:*",
     "@mangia/schema": "workspace:*",
     "hookable": "^6.1.1",

@@ -5,8 +5,8 @@ import { scanPages, scanLayouts } from '@mangia/kit'
 import type { Layout } from '@mangia/kit'
 import type { Plugin } from '../types'
 
-const VIRTUAL_PAGES = 'virtual:angular-pages'
-const RESOLVED_PAGES = '\0virtual:angular-pages'
+const VIRTUAL_PAGES = 'virtual:mangia/pages'
+const RESOLVED_PAGES = '\0virtual:mangia/pages'
 
 export function pagesPlugin(
   srcDir: string,

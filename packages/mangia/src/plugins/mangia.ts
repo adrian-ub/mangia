@@ -7,10 +7,10 @@ import { generateEntryClient, generateEntryServer, generateSSREntry } from '../g
 import { generateAppConfig, generateAppConfigServer } from '../generate/virtual'
 import { generateBaseTsConfig, generateAppTsConfig } from '../generate/tsconfig'
 
-const VIRTUAL_APP_CONFIG = 'virtual:naxt/app-config'
-const RESOLVED_APP_CONFIG = '\0naxt:app-config'
-const VIRTUAL_APP_CONFIG_SERVER = 'virtual:naxt/app-config-server'
-const RESOLVED_APP_CONFIG_SERVER = '\0naxt:app-config-server'
+const VIRTUAL_APP_CONFIG = 'virtual:mangia/app-config'
+const RESOLVED_APP_CONFIG = '\0mangia:app-config'
+const VIRTUAL_APP_CONFIG_SERVER = 'virtual:mangia/app-config-server'
+const RESOLVED_APP_CONFIG_SERVER = '\0mangia:app-config-server'
 
 export function mangiaPlugin(
   config: MangiaConfig,
@@ -32,7 +32,7 @@ export function mangiaPlugin(
 
       writeFileSync(
         join(buildDir, 'entry-client.ts'),
-        generateEntryClient(appComponent, cssFiles, rootDir, srcDir),
+        generateEntryClient(appComponent, cssFiles, rootDir, srcDir, buildDir),
       )
       writeFileSync(
         join(buildDir, 'entry-server.ts'),
@@ -40,7 +40,7 @@ export function mangiaPlugin(
       )
       writeFileSync(
         join(buildDir, 'entry-server-handler.ts'),
-        generateEntryServer(appComponent, cssFiles, rootDir, srcDir, config.app?.head),
+        generateEntryServer(appComponent, cssFiles, rootDir, srcDir, buildDir, config.app?.head),
       )
 
       const aliases: Record<string, string> = {
