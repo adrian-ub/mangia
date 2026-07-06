@@ -1,5 +1,5 @@
 import { createHooks, type Hookable } from 'hookable'
-import { loadMangiaConfig } from '@mangia/kit'
+import { loadMangiaConfig, installModules } from '@mangia/kit'
 import type { MangiaConfig, MangiaHooks } from '@mangia/schema'
 import { buildPlugins } from './builder'
 import type { Plugin } from './types'
@@ -25,6 +25,8 @@ export async function createMangia(options: CreateMangiaOptions = {}): Promise<M
   })
 
   const hooks = createHooks<MangiaHooks>()
+
+  await installModules(config, hooks, rootDir)
 
   const plugins = await buildPlugins(config, hooks, rootDir)
 

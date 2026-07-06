@@ -1,37 +1,59 @@
-import { relative, resolve, join } from 'pathe'
+import { relative, resolve } from 'pathe'
 
-export function generateBaseTsConfig(
-  rootDir: string,
+function rel(buildDir: string, target: string): string {
+  return relative(buildDir, target) || '.'
+}
+
+export function generateRootTsConfig(buildDir: string): string {
+  return JSON.stringify({
+    files: [],
+    references: [
+      { path: './tsconfig.app.json' },
+      { path: './tsconfig.node.json' },
+      { path: './tsconfig.server.json' },
+      { path: './tsconfig.shared.json' },
+    ],
+  }, null, 2) + '\n'
+}
+
+export function generateAppTsConfig(
   buildDir: string,
+  rootDir: string,
+  srcDir: string,
   aliases: Record<string, string>,
   strict: boolean,
 ): string {
   const paths: Record<string, string[]> = {}
   for (const [alias, target] of Object.entries(aliases)) {
-    const relTarget = relative(buildDir, target) || '.'
+    const r = rel(buildDir, target)
     if (alias.endsWith('/*')) {
-      paths[alias] = [`${relTarget}/*`]
+      paths[alias] = [`${r}/*`]
     } else {
-      paths[alias] = [relTarget]
+      paths[alias] = [r]
     }
   }
 
-  const config = {
+  return JSON.stringify({
+    extends: './tsconfig.json',
     compilerOptions: {
       strict,
       noImplicitOverride: true,
       noPropertyAccessFromIndexSignature: true,
       noImplicitReturns: true,
       noFallthroughCasesInSwitch: true,
-      skipLibCheck: true,
-      isolatedModules: true,
       experimentalDecorators: true,
       importHelpers: true,
       target: 'ES2022',
       module: 'preserve',
+      moduleResolution: 'Bundler',
+      skipLibCheck: true,
+      isolatedModules: true,
+      lib: ['ES2022', 'DOM'],
+      types: ['node'],
       baseUrl: '.',
-      rootDir: relative(buildDir, rootDir) || '.',
+      rootDir: rel(buildDir, rootDir),
       paths,
+      outDir: rel(buildDir, resolve(rootDir, 'out-tsc/app')),
     },
     angularCompilerOptions: {
       enableI18nLegacyMessageIdFormat: false,
@@ -39,27 +61,73 @@ export function generateBaseTsConfig(
       strictInputAccessModifiers: true,
       strictTemplates: true,
     },
-  }
-
-  return JSON.stringify(config, null, 2) + '\n'
+    include: [
+      `${rel(buildDir, resolve(rootDir, srcDir))}/**/*.ts`,
+      `${rel(buildDir, resolve(rootDir, srcDir))}/**/*.d.ts`,
+    ],
+    exclude: [
+      `${rel(buildDir, resolve(rootDir, srcDir))}/**/*.spec.ts`,
+    ],
+  }, null, 2) + '\n'
 }
 
-export function generateAppTsConfig(
-  buildDir: string,
-  rootDir: string,
-  srcDir: string,
-): string {
-  const relSrcDir = relative(buildDir, resolve(rootDir, srcDir))
-
-  const config = {
+export function generateNodeTsConfig(buildDir: string, rootDir: string): string {
+  return JSON.stringify({
     extends: './tsconfig.json',
     compilerOptions: {
-      outDir: relative(buildDir, resolve(rootDir, 'out-tsc/app')),
+      target: 'ES2022',
+      module: 'preserve',
+      moduleResolution: 'Bundler',
+      skipLibCheck: true,
+      isolatedModules: true,
+      lib: ['ES2022'],
       types: ['node'],
+      baseUrl: '.',
+      rootDir: rel(buildDir, rootDir),
     },
-    include: [`${relSrcDir}/**/*.ts`],
-    exclude: [`${relSrcDir}/**/*.spec.ts`],
-  }
+    include: [
+      rel(buildDir, resolve(rootDir, 'mangia.config.ts')),
+      `${rel(buildDir, resolve(rootDir, 'modules'))}/**/*.ts`,
+    ],
+  }, null, 2) + '\n'
+}
 
-  return JSON.stringify(config, null, 2) + '\n'
+export function generateServerTsConfig(buildDir: string, rootDir: string): string {
+  return JSON.stringify({
+    extends: './tsconfig.json',
+    compilerOptions: {
+      target: 'ES2022',
+      module: 'preserve',
+      moduleResolution: 'Bundler',
+      skipLibCheck: true,
+      isolatedModules: true,
+      lib: ['ES2022'],
+      types: ['node'],
+      baseUrl: '.',
+      rootDir: rel(buildDir, rootDir),
+    },
+    include: [
+      `${rel(buildDir, resolve(rootDir, 'server'))}/**/*.ts`,
+    ],
+  }, null, 2) + '\n'
+}
+
+export function generateSharedTsConfig(buildDir: string, rootDir: string): string {
+  return JSON.stringify({
+    extends: './tsconfig.json',
+    compilerOptions: {
+      strict: true,
+      target: 'ES2022',
+      module: 'preserve',
+      moduleResolution: 'Bundler',
+      skipLibCheck: true,
+      isolatedModules: true,
+      lib: ['ES2022'],
+      baseUrl: '.',
+      rootDir: rel(buildDir, rootDir),
+    },
+    include: [
+      `${rel(buildDir, resolve(rootDir, 'shared'))}/**/*.ts`,
+    ],
+  }, null, 2) + '\n'
 }

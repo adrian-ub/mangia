@@ -2,7 +2,7 @@ export interface MangiaConfig {
   srcDir?: string
   app?: MangiaAppConfig
   css?: string[]
-  modules?: MangiaModule[]
+  modules?: (string | MangiaModule)[]
   nitro?: Record<string, unknown>
   typescript?: MangiaTypeScriptConfig
 }

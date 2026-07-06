@@ -1,13 +1,9 @@
 {
-  "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "experimentalDecorators": true,
-    "angularCompilerOptions": {
-      "enableI18nLegacyMessageIdFormat": false,
-      "strictInjectionParameters": true,
-      "strictInputAccessModifiers": true,
-      "strictTemplates": true
-    }
-  },
-  "include": ["app", "mangia.config.ts"]
+  "files": [],
+  "references": [
+    { "path": "./.mangia/tsconfig.app.json" },
+    { "path": "./.mangia/tsconfig.node.json" },
+    { "path": "./.mangia/tsconfig.server.json" },
+    { "path": "./.mangia/tsconfig.shared.json" }
+  ]
 }

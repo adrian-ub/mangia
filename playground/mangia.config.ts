@@ -6,6 +6,7 @@ export default defineMangiaConfig({
       title: 'Mangia + Angular',
     },
   },
+  modules: ['~/modules/example'],
   nitro: {
     prerender: {
       routes: ['/'],

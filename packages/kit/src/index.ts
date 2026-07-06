@@ -1,4 +1,4 @@
-export { defineMangiaModule } from './module'
+export { defineMangiaModule, installModules } from './module'
 export type { MangiaModuleDefinition } from './module'
 
 export { loadMangiaConfig } from './config'

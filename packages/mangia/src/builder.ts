@@ -11,6 +11,8 @@ export async function buildPlugins(
   hooks: Hookable<MangiaHooks>,
   rootDir: string,
 ): Promise<Plugin[]> {
+  await hooks.callHook('build:before', config)
+
   const plugins: Plugin[] = []
 
   plugins.push(mangiaPlugin(config, hooks, rootDir))
@@ -20,10 +22,12 @@ export async function buildPlugins(
   try {
     const { nitro } = await loadFromUser<typeof import('nitro/vite')>(rootDir, 'nitro/vite')
     const nitroConfig = config.nitro ? { ...config.nitro } : {}
+    nitroConfig.scanDirs ??= [resolve(rootDir, 'server')]
     nitroConfig.framework = { previewCommand: 'mangia preview' }
     if (nitroConfig.prerender) {
       nitroConfig.prerender = { ...nitroConfig.prerender, routes: [] }
     }
+    await hooks.callHook('nitro:config', nitroConfig)
     plugins.push(...(nitro(nitroConfig) as Plugin[]))
   } catch {
     console.warn('[mangia] Nitro plugin not found — skipping')
