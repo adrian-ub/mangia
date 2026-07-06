@@ -2,7 +2,7 @@ import { glob } from 'tinyglobby'
 import { relative, resolve } from 'pathe'
 
 export interface LayoutScanOptions {
-  layoutsDir: string
+  layoutsDirs: string[]
   rootDir: string
 }
 
@@ -12,12 +12,25 @@ export interface Layout {
 }
 
 export async function scanLayouts(options: LayoutScanOptions): Promise<Layout[]> {
-  const { layoutsDir, rootDir } = options
+  const { layoutsDirs, rootDir } = options
 
-  const files = await glob('*.ts', { cwd: layoutsDir })
+  const seen = new Set<string>()
+  const all: Layout[] = []
 
-  return files.map(f => ({
-    name: f.replace(/\.ts$/, ''),
-    file: relative(rootDir, resolve(layoutsDir, f)),
-  }))
+  for (const layoutsDir of layoutsDirs) {
+    const files = await glob('*.ts', { cwd: layoutsDir })
+
+    for (const f of files) {
+      const name = f.replace(/\.ts$/, '')
+      if (!seen.has(name)) {
+        seen.add(name)
+        all.push({
+          name,
+          file: relative(rootDir, resolve(layoutsDir, f)),
+        })
+      }
+    }
+  }
+
+  return all
 }

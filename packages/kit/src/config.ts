@@ -1,6 +1,8 @@
+import { resolve } from 'pathe'
 import { loadConfig } from 'c12'
 import { defu } from 'defu'
-import type { MangiaConfig } from '@mangia/schema'
+import { glob } from 'tinyglobby'
+import type { MangiaConfig, MangiaConfigLayer } from '@mangia/schema'
 
 export interface LoadMangiaConfigOptions {
   rootDir?: string
@@ -13,12 +15,48 @@ const DEFAULT_CONFIG: Partial<MangiaConfig> = {
 }
 
 export async function loadMangiaConfig(options: LoadMangiaConfigOptions = {}): Promise<MangiaConfig> {
-  const { config } = await loadConfig<MangiaConfig>({
+  const rootDir = options.rootDir ?? process.cwd()
+
+  const localLayerDirs = await glob('layers/*', { onlyDirectories: true, cwd: rootDir })
+  const localLayers = localLayerDirs
+    .map(d => d + '/')
+    .sort((a, b) => b.localeCompare(a))
+
+  const { config, layers: rawLayers } = await loadConfig<MangiaConfig>({
     name: 'mangia',
-    cwd: options.rootDir,
-    overrides: options.overrides,
+    cwd: rootDir,
+    overrides: defu(options.overrides ?? {}, { _extends: localLayers } as any),
     defaults: defu(options.defaults ?? {}, DEFAULT_CONFIG),
+    extend: { extendKey: ['extends', '_extends'] },
   })
+
+  const resolvedLayers: MangiaConfigLayer[] = []
+  const processedDirs = new Set<string>()
+
+  if (rawLayers) {
+    for (const raw of rawLayers) {
+      const cwd = resolve(rootDir, raw.cwd || rootDir)
+      if (!cwd || processedDirs.has(cwd)) continue
+      processedDirs.add(cwd)
+
+      if (cwd === rootDir) continue
+
+      resolvedLayers.push({
+        config: (raw.config ?? {}) as MangiaConfig,
+        cwd,
+        configFile: raw.configFile,
+        meta: raw.meta as { name?: string } | undefined,
+      })
+    }
+  }
+
+  config!._layers = [
+    {
+      config: config!,
+      cwd: rootDir,
+    },
+    ...resolvedLayers,
+  ]
 
   return config!
 }

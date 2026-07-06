@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs'
 import { resolve, relative } from 'pathe'
 import type { Hookable } from 'hookable'
-import type { MangiaHooks, MangiaPage } from '@mangia/schema'
-import { scanPages, scanLayouts } from '@mangia/kit'
+import type { MangiaHooks, MangiaPage, MangiaConfig } from '@mangia/schema'
+import { scanPages, scanLayouts, getLayerDirectories } from '@mangia/kit'
 import type { Layout } from '@mangia/kit'
 import type { Plugin } from '../types'
 
@@ -13,16 +13,20 @@ export function pagesPlugin(
   srcDir: string,
   hooks: Hookable<MangiaHooks>,
   rootDir: string,
+  config: MangiaConfig,
 ): Plugin {
-  let pagesDir: string
-  let layoutsDir: string
+  let pagesDirs: string[]
+  let layoutsDirs: string[]
+  let watchDirs: string[]
 
   return {
     name: 'mangia:pages',
 
-    configResolved(config: any) {
-      pagesDir = resolve(rootDir, srcDir, 'pages')
-      layoutsDir = resolve(rootDir, srcDir, 'layouts')
+    configResolved(_config: any) {
+      const layerDirs = getLayerDirectories(config, rootDir)
+      pagesDirs = layerDirs.map(d => d.appPages)
+      layoutsDirs = layerDirs.map(d => d.appLayouts)
+      watchDirs = [...new Set([...pagesDirs, ...layoutsDirs])]
     },
 
     resolveId(id: string) {
@@ -32,23 +36,33 @@ export function pagesPlugin(
     async load(id: string) {
       if (id !== RESOLVED_PAGES) return
 
-      const pages = await scanPages({ pagesDir, rootDir })
+      const pages = await scanPages({ pagesDirs, rootDir })
 
       await hooks.callHook('pages:extend', pages as MangiaPage[])
       await hooks.callHook('pages:resolved', pages as MangiaPage[])
 
-      const layouts = await scanLayouts({ layoutsDir, rootDir })
+      const layouts = await scanLayouts({ layoutsDirs, rootDir })
       const defaultLayout = layouts.find(l => l.name === 'default')
 
-      const errorFile = resolve(rootDir, srcDir, 'error.ts')
-      const hasErrorComponent = existsSync(errorFile)
+      const layerDirs = getLayerDirectories(config, rootDir)
+      let hasErrorComponent = false
+      let errorFile = ''
+      for (const dir of layerDirs) {
+        const f = dir.appError
+        if (existsSync(f)) {
+          errorFile = f
+          hasErrorComponent = true
+          break
+        }
+      }
 
       return generateRoutesCode(pages as MangiaPage[], rootDir, defaultLayout, hasErrorComponent, errorFile, srcDir)
     },
 
     configureServer(server: any) {
-      server.watcher.add(pagesDir)
-      server.watcher.add(layoutsDir)
+      for (const dir of watchDirs) {
+        server.watcher.add(dir)
+      }
       server.watcher.add(resolve(rootDir, srcDir, 'error.ts'))
 
       const invalidate = () => {

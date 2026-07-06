@@ -1,7 +1,9 @@
 import { createRequire } from 'node:module'
+import { existsSync } from 'node:fs'
 import { resolve } from 'pathe'
 import type { Hookable } from 'hookable'
 import type { MangiaConfig, MangiaHooks } from '@mangia/schema'
+import { getLayerDirectories } from '@mangia/kit'
 import { mangiaPlugin } from './plugins/mangia'
 import { pagesPlugin } from './plugins/pages'
 import type { Plugin } from './types'
@@ -17,12 +19,20 @@ export async function buildPlugins(
 
   plugins.push(mangiaPlugin(config, hooks, rootDir))
 
-  plugins.push(pagesPlugin(config.srcDir ?? 'app', hooks, rootDir))
+  plugins.push(pagesPlugin(config.srcDir ?? 'app', hooks, rootDir, config))
 
   try {
     const { nitro } = await loadFromUser<typeof import('nitro/vite')>(rootDir, 'nitro/vite')
     const nitroConfig = config.nitro ? { ...config.nitro } : {}
-    nitroConfig.scanDirs ??= [resolve(rootDir, 'server')]
+
+    const scanDirs = [resolve(rootDir, 'server')]
+    for (const dir of getLayerDirectories(config, rootDir)) {
+      if (existsSync(dir.server)) {
+        scanDirs.push(dir.server)
+      }
+    }
+    nitroConfig.scanDirs = [...new Set([...(nitroConfig.scanDirs ?? []), ...scanDirs])]
+
     nitroConfig.framework = { previewCommand: 'mangia preview' }
     if (nitroConfig.prerender) {
       nitroConfig.prerender = { ...nitroConfig.prerender, routes: [] }

@@ -5,6 +5,20 @@ export interface MangiaConfig {
   modules?: (string | MangiaModule)[]
   nitro?: Record<string, unknown>
   typescript?: MangiaTypeScriptConfig
+  extends?: (string | MangiaLayerConfig)[]
+  _layers?: MangiaConfigLayer[]
+}
+
+export interface MangiaLayerConfig {
+  path?: string
+  [key: string]: unknown
+}
+
+export interface MangiaConfigLayer {
+  config: MangiaConfig
+  cwd: string
+  configFile?: string
+  meta?: { name?: string }
 }
 
 export interface MangiaAppConfig {

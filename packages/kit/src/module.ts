@@ -28,6 +28,33 @@ export async function installModules(
   hooks: Hookable<MangiaHooks>,
   rootDir: string,
 ): Promise<void> {
+  await installModulesFromConfig(config, hooks, rootDir)
+}
+
+export async function installModulesFromLayers(
+  config: MangiaConfig,
+  hooks: Hookable<MangiaHooks>,
+  rootDir: string,
+): Promise<void> {
+  const layers = config._layers ?? []
+
+  for (const layer of layers) {
+    const cwd = layer.cwd
+    if (cwd === rootDir) continue
+
+    const mods = layer.config.modules ?? []
+    if (mods.length === 0) continue
+
+    const layerConfig = { ...config, ...layer.config, modules: mods }
+    await installModulesFromConfig(layerConfig, hooks, cwd)
+  }
+}
+
+async function installModulesFromConfig(
+  config: MangiaConfig,
+  hooks: Hookable<MangiaHooks>,
+  rootDir: string,
+): Promise<void> {
   const entries = config.modules ?? []
   const _require = createRequire(resolve(rootDir, 'package.json'))
 

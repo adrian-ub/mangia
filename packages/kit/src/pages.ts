@@ -4,7 +4,7 @@ import { relative, resolve } from 'pathe'
 import { addFile, buildTree, compileParsePath, removeFile } from 'unrouting'
 
 export interface PagesScanOptions {
-  pagesDir: string
+  pagesDirs: string[]
   rootDir: string
   extensions?: string[]
 }
@@ -15,20 +15,32 @@ export interface ParsedRoute {
 }
 
 export async function scanPages(options: PagesScanOptions): Promise<MangiaPage[]> {
-  const { pagesDir, rootDir, extensions = ['.ts'] } = options
+  const { pagesDirs, rootDir, extensions = ['.ts'] } = options
 
   const extPattern = extensions.length === 1
     ? `*${extensions[0]}`
     : `*{${extensions.join(',')}}`
   const pattern = `**/${extPattern}`
-  const files = await glob(pattern, {
-    cwd: pagesDir,
-    ignore: ['**/*.spec.ts', '**/*.test.ts'],
-  })
 
-  const filePaths = files.map(f => relative(rootDir, resolve(pagesDir, f)))
-  const opts = { roots: [relative(rootDir, pagesDir) + '/'], extensions }
-  const tree = buildTree(filePaths, opts)
+  const seenPaths = new Set<string>()
+
+  const allFiles: string[] = []
+  for (const pagesDir of pagesDirs) {
+    const files = await glob(pattern, {
+      cwd: pagesDir,
+      ignore: ['**/*.spec.ts', '**/*.test.ts'],
+    })
+    for (const f of files) {
+      const filePath = relative(rootDir, resolve(pagesDir, f))
+      if (!seenPaths.has(filePath)) {
+        seenPaths.add(filePath)
+        allFiles.push(filePath)
+      }
+    }
+  }
+
+  const opts = { roots: pagesDirs.map(d => relative(rootDir, d) + '/'), extensions }
+  const tree = buildTree(allFiles, opts)
 
   return toAngularRouter(tree)
 }

@@ -1,4 +1,4 @@
-export { defineMangiaModule, installModules } from './module'
+export { defineMangiaModule, installModules, installModulesFromLayers } from './module'
 export type { MangiaModuleDefinition } from './module'
 
 export { loadMangiaConfig } from './config'
@@ -18,3 +18,6 @@ export type { LayoutScanOptions, Layout } from './layouts'
 
 export { writeTypes } from './types'
 export type { WriteTypesOptions } from './types'
+
+export { getLayerDirectories } from './layers'
+export type { MangiaLayerDirectories } from './layers'

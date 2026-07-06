@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'node:url'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { resolve, join } from 'pathe'
+import { resolve, join, relative, basename } from 'pathe'
 import type { Hookable } from 'hookable'
-import type { MangiaConfig, MangiaHooks } from '@mangia/schema'
+import type { MangiaConfig, MangiaHooks, MangiaConfigLayer } from '@mangia/schema'
 import type { Plugin } from '../types'
 import { generateAppConfig, generateRootComponent } from '../generate/virtual'
 import {
@@ -37,6 +37,13 @@ const RESOLVED_ANGULAR_VIRTUALS = Object.fromEntries(
 
 const _entryDir = fileURLToPath(new URL('../src/app/', import.meta.url))
 
+function collectLayerNames(layers: MangiaConfigLayer[], rootDir: string): string[] {
+  return layers
+    .filter(l => l.cwd !== rootDir)
+    .map(l => l.meta?.name ?? basename(l.cwd))
+    .filter(Boolean)
+}
+
 export function mangiaPlugin(
   config: MangiaConfig,
   hooks: Hookable<MangiaHooks>,
@@ -48,6 +55,7 @@ export function mangiaPlugin(
   const appComponent = `${srcDir}/app`
   const cssFiles = config.css ?? []
   const strict = config.typescript?.strict ?? true
+  const layers = config._layers ?? []
 
   return {
     name: 'mangia',
@@ -57,19 +65,28 @@ export function mangiaPlugin(
       mkdirSync(buildDir, { recursive: true })
       mkdirSync(join(buildDir, 'types'), { recursive: true })
 
-      const aliases = {
+      const aliases: Record<string, string> = {
         '~': srcDirResolved,
         '~~': rootDir,
         '#build': buildDir,
       }
 
-      writeFileSync(join(buildDir, 'tsconfig.json'), generateRootTsConfig(buildDir))
-      writeFileSync(join(buildDir, 'tsconfig.app.json'), generateAppTsConfig(buildDir, rootDir, srcDir, aliases, strict))
-      writeFileSync(join(buildDir, 'tsconfig.node.json'), generateNodeTsConfig(buildDir, rootDir))
-      writeFileSync(join(buildDir, 'tsconfig.server.json'), generateServerTsConfig(buildDir, rootDir))
-      writeFileSync(join(buildDir, 'tsconfig.shared.json'), generateSharedTsConfig(buildDir, rootDir))
+      for (const layer of layers) {
+        if (layer.cwd === rootDir) continue
+        const name = layer.meta?.name ?? basename(layer.cwd)
+        if (name) {
+          aliases[`#layers/${name}`] = layer.cwd
+        }
+      }
 
-      writeFileSync(join(buildDir, 'types', 'app.d.ts'), generateAppDeclarations())
+      writeFileSync(join(buildDir, 'tsconfig.json'), generateRootTsConfig(buildDir))
+      writeFileSync(join(buildDir, 'tsconfig.app.json'), generateAppTsConfig(buildDir, rootDir, srcDir, aliases, strict, layers))
+      writeFileSync(join(buildDir, 'tsconfig.node.json'), generateNodeTsConfig(buildDir, rootDir, layers))
+      writeFileSync(join(buildDir, 'tsconfig.server.json'), generateServerTsConfig(buildDir, rootDir, layers))
+      writeFileSync(join(buildDir, 'tsconfig.shared.json'), generateSharedTsConfig(buildDir, rootDir, layers))
+
+      const layerNames = collectLayerNames(layers, rootDir)
+      writeFileSync(join(buildDir, 'types', 'app.d.ts'), generateAppDeclarations(layerNames))
       writeFileSync(join(buildDir, 'types', 'node.d.ts'), generateNodeDeclarations())
       writeFileSync(join(buildDir, 'types', 'server.d.ts'), generateServerDeclarations())
       writeFileSync(join(buildDir, 'types', 'shared.d.ts'), generateSharedDeclarations())
