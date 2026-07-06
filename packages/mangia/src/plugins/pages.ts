@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { resolve, relative } from 'pathe'
 import type { Hookable } from 'hookable'
 import type { MangiaHooks, MangiaPage } from '@mangia/schema'
@@ -5,8 +6,8 @@ import { scanPages, scanLayouts } from '@mangia/kit'
 import type { Layout } from '@mangia/kit'
 import type { Plugin } from '../types'
 
-const VIRTUAL_PAGES = 'virtual:mangia/pages'
-const RESOLVED_PAGES = '\0virtual:mangia/pages'
+const VIRTUAL_PAGES = 'virtual:mangia/pages.ts'
+const RESOLVED_PAGES = '\0virtual:mangia/pages.ts'
 
 export function pagesPlugin(
   srcDir: string,
@@ -39,12 +40,16 @@ export function pagesPlugin(
       const layouts = await scanLayouts({ layoutsDir, rootDir })
       const defaultLayout = layouts.find(l => l.name === 'default')
 
-      return generateRoutesCode(pages as MangiaPage[], rootDir, defaultLayout)
+      const errorFile = resolve(rootDir, srcDir, 'error.ts')
+      const hasErrorComponent = existsSync(errorFile)
+
+      return generateRoutesCode(pages as MangiaPage[], rootDir, defaultLayout, hasErrorComponent, errorFile, srcDir)
     },
 
     configureServer(server: any) {
       server.watcher.add(pagesDir)
       server.watcher.add(layoutsDir)
+      server.watcher.add(resolve(rootDir, srcDir, 'error.ts'))
 
       const invalidate = () => {
         const mod = server.moduleGraph.getModuleById(RESOLVED_PAGES)
@@ -101,42 +106,70 @@ function generateRouteEntry(route: MangiaPage, root: string, indent: string = ' 
   return `${indent}{ ${parts.join(', ')} }`
 }
 
-function generateRoutesCode(routes: MangiaPage[], root: string, defaultLayout?: Layout): string {
+function generateRoutesCode(
+  routes: MangiaPage[],
+  root: string,
+  defaultLayout?: Layout,
+  hasErrorComponent?: boolean,
+  errorFile?: string,
+  srcDir?: string,
+): string {
   const routeEntries = routes.map(r => generateRouteEntry(r, root))
+
+  const wildcard = hasErrorComponent && errorFile
+    ? `\n{ path: '**', loadComponent: () => import('/${relative(root, errorFile)}').then(m => resolveComponent(m, '/${srcDir}/error')) },`
+    : `\n{ path: '**', component: DefaultErrorPage },`
+
+  const defaultErrorClass = hasErrorComponent
+    ? ''
+    : [
+        '',
+        '@Component({',
+        "  template: '<div style=\"padding:2rem;text-align:center\"><h1>404</h1><h2>Page Not Found</h2><p>The page you are looking for does not exist.</p><a routerLink=\"/\">Go home</a></div>',",
+        '  imports: [RouterLink],',
+        '  standalone: true,',
+        '})',
+        'class DefaultErrorPage {}',
+      ].join('\n')
 
   const routesCode = defaultLayout
     ? `  {
     path: '',
     loadComponent: () => import('/${defaultLayout.file}').then(m => resolveComponent(m, '/${defaultLayout.file}')),
     children: [\n${routeEntries.join(',\n')}\n    ],
-  }`
-    : routeEntries.join(',\n')
+  },${wildcard}`
+    : `${routeEntries.join(',\n')},${wildcard}`
 
-  return `import { ɵNG_COMP_DEF as NG_COMP_DEF } from '@angular/core';
-
-function resolveComponent(m, path) {
-  const isComponent = (v) => typeof v === 'function' && v[NG_COMP_DEF];
-
-  if (m.default && isComponent(m.default)) return m.default;
-
-  const component = Object.values(m).find(isComponent);
-  if (component) {
-    if (m.default) {
-      if (import.meta.env.DEV) {
-        console.warn(\`[mangia] \${path}: default export is not a @Component, using first @Component found.\`);
-      }
-    }
-    return component;
-  }
-
-  if (import.meta.env.DEV) {
-    console.warn(\`[mangia] \${path}: no @Component found, rendering empty page.\`);
-  }
-  return null;
-}
-
-export const routes = [
-${routesCode}
-];
-`
+  return [
+    "import { ɵNG_COMP_DEF as NG_COMP_DEF } from '@angular/core';",
+    "import { Component } from '@angular/core';",
+    "import { RouterLink } from '@angular/router';",
+    '',
+    'function resolveComponent(m, path) {',
+    '  const isComponent = (v) => typeof v === \'function\' && v[NG_COMP_DEF];',
+    '',
+    "  if (m.default && isComponent(m.default)) return m.default;",
+    '',
+    '  const component = Object.values(m).find(isComponent);',
+    '  if (component) {',
+    '    if (m.default) {',
+    "      if (import.meta.env.DEV) {",
+    "        console.warn(`[mangia] ${path}: default export is not a @Component, using first @Component found.`);",
+    '      }',
+    '    }',
+    '    return component;',
+    '  }',
+    '',
+    '  if (import.meta.env.DEV) {',
+    "    console.warn(`[mangia] ${path}: no @Component found, rendering empty page.`);",
+    '  }',
+    '  return null;',
+    '}',
+    defaultErrorClass,
+    '',
+    'export const routes = [',
+    routesCode,
+    '];',
+    '',
+  ].join('\n')
 }

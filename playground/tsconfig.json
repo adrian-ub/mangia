@@ -1,9 +1,9 @@
 {
-  "files": [],
   "references": [
     { "path": "./.mangia/tsconfig.app.json" },
     { "path": "./.mangia/tsconfig.node.json" },
     { "path": "./.mangia/tsconfig.server.json" },
     { "path": "./.mangia/tsconfig.shared.json" }
-  ]
+  ],
+  "files": []
 }

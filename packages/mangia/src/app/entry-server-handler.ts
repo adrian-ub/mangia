@@ -29,7 +29,14 @@ function htmlTemplate() {
 export default {
   async fetch(request: Request) {
     const url = new URL(request.url);
-    const assets = clientAssets.merge(serverAssets);
+    return renderApp(url);
+  },
+};
+
+async function renderApp(url: URL): Promise<Response> {
+  const assets = clientAssets.merge(serverAssets);
+
+  try {
     const renderedApp = await renderApplication(bootstrap, {
       document: htmlTemplate(),
       url: url.href,
@@ -38,5 +45,20 @@ export default {
     return new Response(renderedApp, {
       headers: { "Content-Type": "text/html;charset=utf-8" },
     });
-  },
-};
+  } catch (err: any) {
+    const isRouteError = err?.code === 4002;
+    const status = isRouteError ? 404 : 500;
+    const title = isRouteError ? 'Page Not Found' : 'Internal Server Error';
+    const message = isRouteError
+      ? `The path "${url.pathname}" was not found.`
+      : 'An unexpected error occurred while rendering.';
+
+    return new Response(
+      `<!DOCTYPE html><html><head><title>${title}</title></head><body style="font-family:sans-serif;padding:2rem;text-align:center"><h1>${status}</h1><p>${message}</p><a href="/">Go home</a></body></html>`,
+      {
+        status,
+        headers: { "Content-Type": "text/html;charset=utf-8" },
+      }
+    );
+  }
+}
