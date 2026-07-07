@@ -1,23 +1,23 @@
-import { fileURLToPath } from 'node:url'
-import { mkdirSync, writeFileSync } from 'node:fs'
-import { resolve, join, relative, basename } from 'pathe'
+import type { MangiaConfig, MangiaConfigLayer, MangiaHooks } from '@mangia/schema'
 import type { Hookable } from 'hookable'
-import type { MangiaConfig, MangiaHooks, MangiaConfigLayer } from '@mangia/schema'
 import type { Plugin } from '../types'
-import { generateAppConfig, generateRootComponent } from '../generate/virtual'
-import {
-  generateRootTsConfig,
-  generateAppTsConfig,
-  generateNodeTsConfig,
-  generateServerTsConfig,
-  generateSharedTsConfig,
-} from '../generate/tsconfig'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { basename, join, resolve } from 'pathe'
 import {
   generateAppDeclarations,
   generateNodeDeclarations,
   generateServerDeclarations,
   generateSharedDeclarations,
 } from '../generate/declarations'
+import {
+  generateAppTsConfig,
+  generateNodeTsConfig,
+  generateRootTsConfig,
+  generateServerTsConfig,
+  generateSharedTsConfig,
+} from '../generate/tsconfig'
+import { generateAppConfig, generateRootComponent } from '../generate/virtual'
 
 const VIRTUAL_APP_CONFIG = 'virtual:mangia/app-config'
 const RESOLVED_APP_CONFIG = '\0mangia:app-config'
@@ -61,7 +61,7 @@ export function mangiaPlugin(
     name: 'mangia',
     enforce: 'pre',
 
-    config(userConfig: any) {
+    config(_userConfig: any) {
       mkdirSync(buildDir, { recursive: true })
       mkdirSync(join(buildDir, 'types'), { recursive: true })
 
@@ -72,7 +72,8 @@ export function mangiaPlugin(
       }
 
       for (const layer of layers) {
-        if (layer.cwd === rootDir) continue
+        if (layer.cwd === rootDir)
+          continue
         const name = layer.meta?.name ?? basename(layer.cwd)
         if (name) {
           aliases[`#layers/${name}`] = layer.cwd
@@ -115,18 +116,23 @@ export function mangiaPlugin(
     },
 
     resolveId(id: string) {
-      if (id === VIRTUAL_APP_CONFIG) return RESOLVED_APP_CONFIG
-      if (id === VIRTUAL_ROOT_COMPONENT) return RESOLVED_ROOT_COMPONENT
-      if (id in RESOLVED_ANGULAR_VIRTUALS) return RESOLVED_ANGULAR_VIRTUALS[id]
+      if (id === VIRTUAL_APP_CONFIG)
+        return RESOLVED_APP_CONFIG
+      if (id === VIRTUAL_ROOT_COMPONENT)
+        return RESOLVED_ROOT_COMPONENT
+      if (id in RESOLVED_ANGULAR_VIRTUALS)
+        return RESOLVED_ANGULAR_VIRTUALS[id]
     },
 
     load(id: string) {
-      if (id === RESOLVED_APP_CONFIG) return generateAppConfig(rootDir, srcDir, config.app?.head)
-      if (id === RESOLVED_ROOT_COMPONENT) return generateRootComponent(appComponent, cssFiles, rootDir, srcDir, buildDir)
+      if (id === RESOLVED_APP_CONFIG)
+        return generateAppConfig(rootDir, srcDir, config.app?.head)
+      if (id === RESOLVED_ROOT_COMPONENT)
+        return generateRootComponent(appComponent, cssFiles, rootDir, srcDir, buildDir)
       for (const [virtual, resolved] of Object.entries(RESOLVED_ANGULAR_VIRTUALS)) {
-        if (id === resolved) return ANGULAR_VIRTUALS[virtual]
+        if (id === resolved)
+          return ANGULAR_VIRTUALS[virtual]
       }
     },
   }
 }
-

@@ -1,6 +1,6 @@
-import { resolve } from 'pathe'
-import { createRequire } from 'node:module'
 import { existsSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { resolve } from 'pathe'
 
 export interface Resolver {
   resolve: (...path: string[]) => string

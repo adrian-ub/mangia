@@ -1,8 +1,9 @@
+import { execSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
-import { resolve, dirname } from 'pathe'
+import process from 'node:process'
 import { defineCommand } from 'citty'
 import { consola } from 'consola'
-import { execSync } from 'node:child_process'
+import { dirname, resolve } from 'pathe'
 
 export default defineCommand({
   meta: {

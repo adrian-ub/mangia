@@ -1,10 +1,10 @@
-import { existsSync } from 'node:fs'
-import { resolve, relative } from 'pathe'
-import type { Hookable } from 'hookable'
-import type { MangiaHooks, MangiaPage, MangiaConfig } from '@mangia/schema'
-import { scanPages, scanLayouts, getLayerDirectories } from '@mangia/kit'
 import type { Layout } from '@mangia/kit'
+import type { MangiaConfig, MangiaHooks, MangiaPage } from '@mangia/schema'
+import type { Hookable } from 'hookable'
 import type { Plugin } from '../types'
+import { existsSync } from 'node:fs'
+import { getLayerDirectories, scanLayouts, scanPages } from '@mangia/kit'
+import { relative, resolve } from 'pathe'
 
 const VIRTUAL_PAGES = 'virtual:mangia/pages.ts'
 const RESOLVED_PAGES = '\0virtual:mangia/pages.ts'
@@ -30,11 +30,13 @@ export function pagesPlugin(
     },
 
     resolveId(id: string) {
-      if (id === VIRTUAL_PAGES) return RESOLVED_PAGES
+      if (id === VIRTUAL_PAGES)
+        return RESOLVED_PAGES
     },
 
     async load(id: string) {
-      if (id !== RESOLVED_PAGES) return
+      if (id !== RESOLVED_PAGES)
+        return
 
       const pages = await scanPages({ pagesDirs, rootDir })
 
@@ -74,12 +76,14 @@ export function pagesPlugin(
       }
 
       server.watcher.on('add', (path: string) => {
-        if (!path.endsWith('.ts')) return
+        if (!path.endsWith('.ts'))
+          return
         invalidate()
       })
 
       server.watcher.on('unlink', (path: string) => {
-        if (!path.endsWith('.ts')) return
+        if (!path.endsWith('.ts'))
+          return
         invalidate()
       })
     },
@@ -92,7 +96,7 @@ function generateRouteEntry(route: MangiaPage, root: string, indent: string = ' 
   if (route.path.includes('**') && route.file) {
     const idx = route.path.indexOf('**')
     const parent = route.path.slice(0, idx).replace(/\/$/, '')
-    const importPath = '/' + relative(root, route.file)
+    const importPath = `/${relative(root, route.file)}`
     const loadComponent = `() => import('${importPath}').then(m => resolveComponent(m, '${importPath}'))`
 
     const catchAllParam = route.data?._catchAllParam as string | undefined
@@ -101,13 +105,16 @@ function generateRouteEntry(route: MangiaPage, root: string, indent: string = ' 
       const childRoute = `{ matcher: (segments) => ({ consumed: segments, posParams: { ${catchAllParam}: new UrlSegment(segments.map(s=>s.path).join('/'), {}) } }), loadComponent: ${loadComponent} }`
       if (parent) {
         entries.push(`${indent}{ path: '${parent}', children: [${childRoute}] }`)
-      } else {
+      }
+      else {
         entries.push(`${indent}${childRoute}`)
       }
-    } else {
+    }
+    else {
       if (parent) {
         entries.push(`${indent}{ path: '${parent}', children: [{ path: '**', loadComponent: ${loadComponent} }] }`)
-      } else {
+      }
+      else {
         entries.push(`${indent}{ path: '**', loadComponent: ${loadComponent} }`)
       }
     }
@@ -118,12 +125,13 @@ function generateRouteEntry(route: MangiaPage, root: string, indent: string = ' 
 
   if (route.matcherCode) {
     parts.push(`matcher: ${route.matcherCode}`)
-  } else {
+  }
+  else {
     parts.push(`path: '${route.path}'`)
   }
 
   if (route.file) {
-    const importPath = '/' + relative(root, route.file)
+    const importPath = `/${relative(root, route.file)}`
     const loadComponent = `() => import('${importPath}').then(m => resolveComponent(m, '${importPath}'))`
     parts.push(`loadComponent: ${loadComponent}`)
   }
@@ -133,7 +141,7 @@ function generateRouteEntry(route: MangiaPage, root: string, indent: string = ' 
   }
 
   if (route.children?.length) {
-    const childEntries = route.children.flatMap(c => generateRouteEntry(c, root, indent + '  '))
+    const childEntries = route.children.flatMap(c => generateRouteEntry(c, root, `${indent}  `))
     parts.push(`children: [\n${childEntries.join(',\n')}\n${indent}]`)
   }
 
@@ -161,7 +169,7 @@ function generateRoutesCode(
     : [
         '',
         '@Component({',
-        "  template: '<div style=\"padding:2rem;text-align:center\"><h1>404</h1><h2>Page Not Found</h2><p>The page you are looking for does not exist.</p><a routerLink=\"/\">Go home</a></div>',",
+        '  template: \'<div style="padding:2rem;text-align:center"><h1>404</h1><h2>Page Not Found</h2><p>The page you are looking for does not exist.</p><a routerLink="/">Go home</a></div>\',',
         '  imports: [RouterLink],',
         '  standalone: true,',
         '})',
@@ -177,9 +185,9 @@ function generateRoutesCode(
     : `${routeEntries.join(',\n')},${wildcard}`
 
   const header = [
-    "import { ɵNG_COMP_DEF as NG_COMP_DEF } from '@angular/core';",
-    "import { Component } from '@angular/core';",
-    "import { RouterLink, RouterOutlet, UrlSegment } from '@angular/router';",
+    'import { ɵNG_COMP_DEF as NG_COMP_DEF } from \'@angular/core\';',
+    'import { Component } from \'@angular/core\';',
+    'import { RouterLink, RouterOutlet, UrlSegment } from \'@angular/router\';',
   ]
 
   return [
@@ -188,20 +196,20 @@ function generateRoutesCode(
     'function resolveComponent(m, path) {',
     '  const isComponent = (v) => typeof v === \'function\' && v[NG_COMP_DEF];',
     '',
-    "  if (m.default && isComponent(m.default)) return m.default;",
+    '  if (m.default && isComponent(m.default)) return m.default;',
     '',
     '  const component = Object.values(m).find(isComponent);',
     '  if (component) {',
     '    if (m.default) {',
-    "      if (import.meta.env.DEV) {",
-    "        console.warn(`[mangia] ${path}: default export is not a @Component, using first @Component found.`);",
+    '      if (import.meta.env.DEV) {',
+    '        console.warn(`[mangia] ' + '$' + '{path}: default export is not a @Component, using first @Component found.`);',
     '      }',
     '    }',
     '    return component;',
     '  }',
     '',
     '  if (import.meta.env.DEV) {',
-    "    console.warn(`[mangia] ${path}: no @Component found, rendering empty page.`);",
+    '    console.warn(`[mangia] ' + '$' + '{path}: no @Component found, rendering empty page.`);',
     '  }',
     '  return null;',
     '}',

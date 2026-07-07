@@ -1,5 +1,5 @@
-import { glob } from 'tinyglobby'
 import { relative, resolve } from 'pathe'
+import { glob } from 'tinyglobby'
 
 export interface LayoutScanOptions {
   layoutsDirs: string[]

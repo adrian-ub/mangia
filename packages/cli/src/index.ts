@@ -2,8 +2,8 @@
 
 import { defineCommand, runMain } from 'citty'
 import { consola } from 'consola'
-import dev from './commands/dev'
 import build from './commands/build'
+import dev from './commands/dev'
 import prepare from './commands/prepare'
 import preview from './commands/preview'
 

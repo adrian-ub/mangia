@@ -1,9 +1,11 @@
-import { defineCommand } from 'citty'
-import { resolve } from 'pathe'
-import { consola } from 'consola'
+import type { Buffer } from 'node:buffer'
 import { spawn } from 'node:child_process'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
+import process from 'node:process'
+import { defineCommand } from 'citty'
+import { consola } from 'consola'
+import { resolve } from 'pathe'
 import { loadUserMangia, loadUserVite } from '../utils'
 
 function routeToPath(route: string): string {
@@ -41,7 +43,8 @@ async function generateStatic(rootDir: string, routes: string[]) {
     proc.on('error', reject)
     proc.on('exit', (code) => {
       clearTimeout(timeout)
-      if (!started) reject(new Error(`Server exited with code ${code}`))
+      if (!started)
+        reject(new Error(`Server exited with code ${code}`))
     })
   })
 
@@ -59,7 +62,8 @@ async function generateStatic(rootDir: string, routes: string[]) {
       await mkdir(dirname(filePath), { recursive: true })
       await writeFile(filePath, html, 'utf-8')
     }
-  } finally {
+  }
+  finally {
     proc.kill()
   }
 }
@@ -110,7 +114,8 @@ export default defineCommand({
 
       consola.success('Build complete')
       await instance.close()
-    } catch (error) {
+    }
+    catch (error) {
       consola.error('Build failed:', error)
       process.exit(1)
     }

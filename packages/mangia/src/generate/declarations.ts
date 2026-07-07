@@ -1,9 +1,9 @@
 export function generateAppDeclarations(layers: string[] = []): string {
-  let layerImports = ''
   let layerDeclarations = ''
 
   for (const name of layers) {
-    if (!name) continue
+    if (!name)
+      continue
     layerDeclarations += `\ndeclare module '#layers/${name}' {\n  const content: unknown\n  export default content\n}\n`
     layerDeclarations += `declare module '#layers/${name}/*' {\n  const content: unknown\n  export default content\n}\n`
   }

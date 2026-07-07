@@ -1,6 +1,6 @@
-import { appConfig } from 'virtual:mangia/app-config';
-import { __rootComponent } from 'virtual:mangia/root-component';
-import { bootstrapApplication } from 'virtual:mangia/ng-platform-browser';
+import { appConfig } from 'virtual:mangia/app-config'
+import { bootstrapApplication } from 'virtual:mangia/ng-platform-browser'
+import { __rootComponent } from 'virtual:mangia/root-component'
 
 bootstrapApplication(__rootComponent, appConfig)
-  .catch((err) => console.error(err));
+  .catch((err: any) => console.error(err))

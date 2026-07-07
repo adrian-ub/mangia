@@ -17,7 +17,7 @@ export default defineMangiaModule({
     })
 
     ctx.addHooks({
-      'nitro:config'(nitroConfig) {
+      'nitro:config': function (nitroConfig) {
         nitroConfig.framework = {
           ...nitroConfig.framework as Record<string, unknown>,
           _extendedByModule: 'example',

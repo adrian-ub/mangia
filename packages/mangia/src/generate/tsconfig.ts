@@ -1,5 +1,5 @@
-import { relative, resolve, basename } from 'pathe'
 import type { MangiaConfigLayer } from '@mangia/schema'
+import { basename, relative, resolve } from 'pathe'
 
 function rel(buildDir: string, target: string): string {
   return relative(buildDir, target) || '.'
@@ -10,15 +10,8 @@ function layerIncludeGlob(buildDir: string, rootDir: string, subpath: string): s
   return `${rootRel}/layers/*/${subpath}`
 }
 
-function collectLayerNames(layers: MangiaConfigLayer[], rootDir: string): string[] {
-  return layers
-    .filter(l => l.cwd !== rootDir)
-    .map(l => l.meta?.name ?? basename(l.cwd))
-    .filter(Boolean)
-}
-
-export function generateRootTsConfig(buildDir: string): string {
-  return JSON.stringify({
+export function generateRootTsConfig(_buildDir: string): string {
+  return `${JSON.stringify({
     files: [],
     references: [
       { path: './tsconfig.app.json' },
@@ -26,7 +19,7 @@ export function generateRootTsConfig(buildDir: string): string {
       { path: './tsconfig.server.json' },
       { path: './tsconfig.shared.json' },
     ],
-  }, null, 2) + '\n'
+  }, null, 2)}\n`
 }
 
 export function generateAppTsConfig(
@@ -42,13 +35,15 @@ export function generateAppTsConfig(
     const r = rel(buildDir, target)
     if (alias.endsWith('/*')) {
       paths[alias] = [`${r}/*`]
-    } else {
+    }
+    else {
       paths[alias] = [r]
     }
   }
 
   for (const layer of layers) {
-    if (layer.cwd === rootDir) continue
+    if (layer.cwd === rootDir)
+      continue
     const name = layer.meta?.name ?? basename(layer.cwd)
     if (name) {
       const layerRoot = rel(buildDir, resolve(layer.cwd))
@@ -57,7 +52,7 @@ export function generateAppTsConfig(
     }
   }
 
-  return JSON.stringify({
+  return `${JSON.stringify({
     extends: './tsconfig.json',
     compilerOptions: {
       strict,
@@ -95,15 +90,15 @@ export function generateAppTsConfig(
     exclude: [
       `${rel(buildDir, resolve(rootDir, srcDir))}/**/*.spec.ts`,
     ],
-  }, null, 2) + '\n'
+  }, null, 2)}\n`
 }
 
 export function generateNodeTsConfig(
   buildDir: string,
   rootDir: string,
-  layers: MangiaConfigLayer[] = [],
+  _layers: MangiaConfigLayer[] = [],
 ): string {
-  return JSON.stringify({
+  return `${JSON.stringify({
     extends: './tsconfig.json',
     compilerOptions: {
       target: 'ES2022',
@@ -122,15 +117,15 @@ export function generateNodeTsConfig(
       `${layerIncludeGlob(buildDir, rootDir, 'mangia.config.*')}`,
       `${layerIncludeGlob(buildDir, rootDir, 'modules/**/*.ts')}`,
     ],
-  }, null, 2) + '\n'
+  }, null, 2)}\n`
 }
 
 export function generateServerTsConfig(
   buildDir: string,
   rootDir: string,
-  layers: MangiaConfigLayer[] = [],
+  _layers: MangiaConfigLayer[] = [],
 ): string {
-  return JSON.stringify({
+  return `${JSON.stringify({
     extends: './tsconfig.json',
     compilerOptions: {
       target: 'ES2022',
@@ -147,15 +142,15 @@ export function generateServerTsConfig(
       `${rel(buildDir, resolve(rootDir, 'server'))}/**/*.ts`,
       `${layerIncludeGlob(buildDir, rootDir, 'server/**/*.ts')}`,
     ],
-  }, null, 2) + '\n'
+  }, null, 2)}\n`
 }
 
 export function generateSharedTsConfig(
   buildDir: string,
   rootDir: string,
-  layers: MangiaConfigLayer[] = [],
+  _layers: MangiaConfigLayer[] = [],
 ): string {
-  return JSON.stringify({
+  return `${JSON.stringify({
     extends: './tsconfig.json',
     compilerOptions: {
       strict: true,
@@ -172,5 +167,5 @@ export function generateSharedTsConfig(
       `${rel(buildDir, resolve(rootDir, 'shared'))}/**/*.ts`,
       `${layerIncludeGlob(buildDir, rootDir, 'shared/**/*.ts')}`,
     ],
-  }, null, 2) + '\n'
+  }, null, 2)}\n`
 }

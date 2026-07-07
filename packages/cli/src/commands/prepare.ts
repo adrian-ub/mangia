@@ -1,7 +1,8 @@
-import { defineCommand } from 'citty'
-import { resolve } from 'pathe'
-import { consola } from 'consola'
 import { createRequire } from 'node:module'
+import process from 'node:process'
+import { defineCommand } from 'citty'
+import { consola } from 'consola'
+import { resolve } from 'pathe'
 
 export default defineCommand({
   meta: {
@@ -26,12 +27,13 @@ export default defineCommand({
     try {
       const _require = createRequire(resolve(rootDir, 'package.json'))
       const kitPath = _require.resolve('@mangia/kit')
-      const kit = await import(kitPath) as typeof import('@mangia/kit')
+      const kit = await import(kitPath)
 
       kit.writeTypes({ rootDir })
 
       consola.success('Types generated in .mangia/types.d.ts')
-    } catch (error) {
+    }
+    catch (error) {
       consola.error('Prepare failed:', error)
       process.exit(1)
     }

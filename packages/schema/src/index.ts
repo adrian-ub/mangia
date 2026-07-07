@@ -68,7 +68,7 @@ export interface MangiaModuleMeta {
 
 export interface MangiaModuleContext {
   options: MangiaConfig
-  addPlugin: (plugin: string | { src: string; mode?: 'client' | 'server' | 'all' }) => void
+  addPlugin: (plugin: string | { src: string, mode?: 'client' | 'server' | 'all' }) => void
   extendPages: (cb: (pages: MangiaPage[]) => void) => void
   addHooks: (hooks: Partial<MangiaHooks>) => void
 }

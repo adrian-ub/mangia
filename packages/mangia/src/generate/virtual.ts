@@ -1,6 +1,6 @@
+import type { MangiaHead } from '@mangia/schema'
 import { existsSync } from 'node:fs'
 import { relative, resolve } from 'pathe'
-import type { MangiaHead } from '@mangia/schema'
 
 export function generateAppConfig(rootDir: string, srcDir: string, head?: MangiaHead): string {
   const srcAppConfigPath = resolve(rootDir, srcDir, 'app.config.ts')
@@ -8,16 +8,16 @@ export function generateAppConfig(rootDir: string, srcDir: string, head?: Mangia
 
   const withHead = (code: string) => {
     const headJson = JSON.stringify(head ?? {})
-    return code + `\n\nexport const head = ${headJson};`
+    return `${code}\n\nexport const head = ${headJson};`
   }
 
   if (hasUserConfig) {
     return withHead([
-      "import { mergeApplicationConfig } from '@angular/core';",
-      "import { provideRouter } from '@angular/router';",
-      "import { provideHttpClient, withFetch } from '@angular/common/http';",
-      "import { provideClientHydration } from '@angular/platform-browser';",
-      "import { routes } from 'virtual:mangia/pages.ts';",
+      'import { mergeApplicationConfig } from \'@angular/core\';',
+      'import { provideRouter } from \'@angular/router\';',
+      'import { provideHttpClient, withFetch } from \'@angular/common/http\';',
+      'import { provideClientHydration } from \'@angular/platform-browser\';',
+      'import { routes } from \'virtual:mangia/pages.ts\';',
       `import { default as userConfig } from '/${srcDir}/app.config';`,
       '',
       'const defaultConfig = {',
@@ -37,10 +37,10 @@ export function generateAppConfig(rootDir: string, srcDir: string, head?: Mangia
   }
 
   return withHead([
-    "import { provideRouter } from '@angular/router';",
-    "import { provideHttpClient, withFetch } from '@angular/common/http';",
-    "import { provideClientHydration } from '@angular/platform-browser';",
-    "import { routes } from 'virtual:mangia/pages.ts';",
+    'import { provideRouter } from \'@angular/router\';',
+    'import { provideHttpClient, withFetch } from \'@angular/common/http\';',
+    'import { provideClientHydration } from \'@angular/platform-browser\';',
+    'import { routes } from \'virtual:mangia/pages.ts\';',
     '',
     'export const appConfig = {',
     '  providers: [',
@@ -59,7 +59,7 @@ export function generateRootComponent(
   srcDir: string,
   buildDir: string,
 ): string {
-  const cssImports = css.map(f => `import '${relative(buildDir, resolve(rootDir, f.replace(/^~\//, srcDir + '/')))}';`).join('\n')
+  const cssImports = css.map(f => `import '${relative(buildDir, resolve(rootDir, f.replace(/^~\//, `${srcDir}/`)))}';`).join('\n')
 
   return [
     `import * as __module from '/${appComponent}';`,

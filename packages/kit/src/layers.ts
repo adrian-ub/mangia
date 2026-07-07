@@ -1,5 +1,5 @@
-import { resolve, basename } from 'pathe'
 import type { MangiaConfig, MangiaConfigLayer } from '@mangia/schema'
+import { basename, resolve } from 'pathe'
 
 export interface MangiaLayerDirectories {
   root: string

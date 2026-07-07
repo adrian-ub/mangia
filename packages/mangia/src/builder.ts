@@ -1,12 +1,12 @@
-import { createRequire } from 'node:module'
-import { existsSync } from 'node:fs'
-import { resolve } from 'pathe'
-import type { Hookable } from 'hookable'
 import type { MangiaConfig, MangiaHooks } from '@mangia/schema'
+import type { Hookable } from 'hookable'
+import type { Plugin } from './types'
+import { existsSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { getLayerDirectories } from '@mangia/kit'
+import { resolve } from 'pathe'
 import { mangiaPlugin } from './plugins/mangia'
 import { pagesPlugin } from './plugins/pages'
-import type { Plugin } from './types'
 
 export async function buildPlugins(
   config: MangiaConfig,
@@ -31,7 +31,7 @@ export async function buildPlugins(
         scanDirs.push(dir.server)
       }
     }
-    nitroConfig.scanDirs = [...new Set([...(nitroConfig.scanDirs ?? []), ...scanDirs])]
+    nitroConfig.scanDirs = [...new Set([...((nitroConfig.scanDirs ?? []) as string[]), ...scanDirs])]
 
     nitroConfig.framework = { previewCommand: 'mangia preview' }
     if (nitroConfig.prerender) {
@@ -39,7 +39,8 @@ export async function buildPlugins(
     }
     await hooks.callHook('nitro:config', nitroConfig)
     plugins.push(...(nitro(nitroConfig) as Plugin[]))
-  } catch {
+  }
+  catch {
     console.warn('[mangia] Nitro plugin not found — skipping')
   }
 
@@ -53,7 +54,8 @@ export async function buildPlugins(
       })
       plugins.push(...(angularPlugins as Plugin[]))
     }
-  } catch {
+  }
+  catch {
     console.warn('[mangia] @oxc-angular/vite not found — skipping')
   }
 

@@ -1,4 +1,4 @@
-import type { MangiaConfig, MangiaAppConfigInput } from '@mangia/schema'
+import type { MangiaAppConfigInput, MangiaConfig } from '@mangia/schema'
 
 export function defineMangiaConfig(config: MangiaConfig): MangiaConfig {
   return config

@@ -15,15 +15,18 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "test": "vitest run",
+    "typecheck": "pnpm -r --filter './packages/*' run typecheck",
     "prepare": "git config core.hooksPath .githooks && simple-git-hooks"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.1.0",
+    "@types/node": "^22.0.0",
     "eslint": "^10.5.0",
     "nano-staged": "^1.0.2",
     "simple-git-hooks": "^2.13.1",
     "tsdown": "^0.22.3",
     "turbo": "^2.5.0",
+    "typescript": "~5.9.3",
     "vitest": "^3.1.0"
   },
   "simple-git-hooks": {

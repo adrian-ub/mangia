@@ -1,5 +1,5 @@
-import { defineEventHandler } from 'nitro/h3'
 import type { Post } from '../../shared/types/post'
+import { defineEventHandler } from 'nitro/h3'
 
 const posts: Post[] = [
   { id: 1, title: 'Getting Started with Mangia', body: 'Mangia is a metaframework for Angular...' },

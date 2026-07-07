@@ -1,8 +1,10 @@
-import { createHooks, type Hookable } from 'hookable'
-import { loadMangiaConfig, installModules, installModulesFromLayers } from '@mangia/kit'
 import type { MangiaConfig, MangiaHooks } from '@mangia/schema'
-import { buildPlugins } from './builder'
+import type { Hookable } from 'hookable'
 import type { Plugin } from './types'
+import process from 'node:process'
+import { installModules, installModulesFromLayers, loadMangiaConfig } from '@mangia/kit'
+import { createHooks } from 'hookable'
+import { buildPlugins } from './builder'
 
 export interface CreateMangiaOptions {
   rootDir?: string

@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core'
-import { ActivatedRoute, RouterLink } from '@angular/router'
 import { toSignal } from '@angular/core/rxjs-interop'
+import { ActivatedRoute, RouterLink } from '@angular/router'
 import { map } from 'rxjs'
 
 @Component({
@@ -14,5 +14,5 @@ import { map } from 'rxjs'
 })
 export default class BlogPostPage {
   private route = inject(ActivatedRoute)
-  slug = toSignal(this.route.params.pipe(map(p => p['slug'])), { initialValue: '' })
+  slug = toSignal(this.route.params.pipe(map(p => p.slug)), { initialValue: '' })
 }

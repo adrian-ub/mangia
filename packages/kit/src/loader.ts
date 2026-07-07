@@ -1,9 +1,9 @@
 import { createRequire } from 'node:module'
 
 export interface MangiaLoader {
-  mangia: typeof import('mangia')
-  kit: typeof import('@mangia/kit')
-  schema: typeof import('@mangia/schema')
+  mangia: { createMangia: (opts: { rootDir: string }) => Promise<{ plugins: unknown[], close: () => Promise<void> }> }
+  kit: { writeTypes: (opts: { rootDir: string }) => Promise<void> }
+  schema: Record<string, unknown>
 }
 
 export async function loadMangia(rootDir: string): Promise<MangiaLoader> {
@@ -14,10 +14,10 @@ export async function loadMangia(rootDir: string): Promise<MangiaLoader> {
   const schemaPath = _require.resolve('@mangia/schema', { paths: [rootDir] })
 
   const [mangia, kit, schema] = await Promise.all([
-    import(mangiaPath) as Promise<typeof import('mangia')>,
-    import(kitPath) as Promise<typeof import('@mangia/kit')>,
-    import(schemaPath) as Promise<typeof import('@mangia/schema')>,
+    import(mangiaPath),
+    import(kitPath),
+    import(schemaPath),
   ])
 
-  return { mangia, kit, schema }
+  return { mangia, kit, schema } as unknown as MangiaLoader
 }

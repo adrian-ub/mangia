@@ -1,15 +1,16 @@
-import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs'
-import { join } from 'node:path'
-import { tmpdir } from 'node:os'
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
-import { describe, it, expect } from 'vitest'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { describe, expect, it } from 'vitest'
 import { scanPages } from '../src/pages'
 
 async function withTempDir(fn: (dir: string) => Promise<void>) {
   const dir = mkdtempSync(join(tmpdir(), 'mangia-test-'))
   try {
     await fn(dir)
-  } finally {
+  }
+  finally {
     await rm(dir, { recursive: true, force: true })
   }
 }

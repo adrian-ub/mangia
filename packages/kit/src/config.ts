@@ -1,8 +1,9 @@
-import { resolve } from 'pathe'
+import type { MangiaConfig, MangiaConfigLayer } from '@mangia/schema'
+import process from 'node:process'
 import { loadConfig } from 'c12'
 import { defu } from 'defu'
+import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
-import type { MangiaConfig, MangiaConfigLayer } from '@mangia/schema'
 
 export interface LoadMangiaConfigOptions {
   rootDir?: string
@@ -19,7 +20,7 @@ export async function loadMangiaConfig(options: LoadMangiaConfigOptions = {}): P
 
   const localLayerDirs = await glob('layers/*', { onlyDirectories: true, cwd: rootDir })
   const localLayers = localLayerDirs
-    .map(d => d + '/')
+    .map(d => `${d}/`)
     .sort((a, b) => b.localeCompare(a))
 
   const { config, layers: rawLayers } = await loadConfig<MangiaConfig>({
@@ -36,10 +37,12 @@ export async function loadMangiaConfig(options: LoadMangiaConfigOptions = {}): P
   if (rawLayers) {
     for (const raw of rawLayers) {
       const cwd = resolve(rootDir, raw.cwd || rootDir)
-      if (!cwd || processedDirs.has(cwd)) continue
+      if (!cwd || processedDirs.has(cwd))
+        continue
       processedDirs.add(cwd)
 
-      if (cwd === rootDir) continue
+      if (cwd === rootDir)
+        continue
 
       resolvedLayers.push({
         config: (raw.config ?? {}) as MangiaConfig,

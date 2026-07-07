@@ -1,6 +1,7 @@
+import process from 'node:process'
 import { defineCommand } from 'citty'
-import { resolve } from 'pathe'
 import { consola } from 'consola'
+import { resolve } from 'pathe'
 import { loadUserMangia, loadUserVite } from '../utils'
 
 export default defineCommand({
@@ -23,10 +24,10 @@ export default defineCommand({
       default: 'localhost',
     },
     port: {
-      type: 'number',
+      type: 'string',
       alias: 'p',
       description: 'Port number',
-      default: 3000,
+      default: '3000',
     },
   },
 
@@ -46,7 +47,7 @@ export default defineCommand({
         plugins: instance.plugins as any,
         server: {
           host: args.host,
-          port: args.port,
+          port: Number(args.port),
         },
       })
 
@@ -66,7 +67,8 @@ export default defineCommand({
 
       process.on('SIGTERM', stop)
       process.on('SIGINT', stop)
-    } catch (error) {
+    }
+    catch (error) {
       consola.error('Failed to start dev server:', error)
       process.exit(1)
     }
