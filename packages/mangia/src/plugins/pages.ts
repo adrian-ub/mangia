@@ -86,21 +86,41 @@ export function pagesPlugin(
   }
 }
 
-function generateRouteEntry(route: MangiaPage, root: string, indent: string = '  '): string {
+function generateRouteEntry(route: MangiaPage, root: string, indent: string = '  '): string[] {
+  const entries: string[] = []
+
   if (route.path.includes('**') && route.file) {
     const idx = route.path.indexOf('**')
     const parent = route.path.slice(0, idx).replace(/\/$/, '')
     const importPath = '/' + relative(root, route.file)
     const loadComponent = `() => import('${importPath}').then(m => resolveComponent(m, '${importPath}'))`
 
-    if (parent) {
-      return `${indent}{ path: '${parent}', children: [{ path: '**', loadComponent: ${loadComponent} }] }`
+    const catchAllParam = route.data?._catchAllParam as string | undefined
+
+    if (catchAllParam) {
+      const childRoute = `{ matcher: (segments) => ({ consumed: segments, posParams: { ${catchAllParam}: new UrlSegment(segments.map(s=>s.path).join('/'), {}) } }), loadComponent: ${loadComponent} }`
+      if (parent) {
+        entries.push(`${indent}{ path: '${parent}', children: [${childRoute}] }`)
+      } else {
+        entries.push(`${indent}${childRoute}`)
+      }
+    } else {
+      if (parent) {
+        entries.push(`${indent}{ path: '${parent}', children: [{ path: '**', loadComponent: ${loadComponent} }] }`)
+      } else {
+        entries.push(`${indent}{ path: '**', loadComponent: ${loadComponent} }`)
+      }
     }
-    return `${indent}{ path: '**', loadComponent: ${loadComponent} }`
+    return entries
   }
 
   const parts: string[] = []
-  parts.push(`path: '${route.path}'`)
+
+  if (route.matcherCode) {
+    parts.push(`matcher: ${route.matcherCode}`)
+  } else {
+    parts.push(`path: '${route.path}'`)
+  }
 
   if (route.file) {
     const importPath = '/' + relative(root, route.file)
@@ -113,11 +133,13 @@ function generateRouteEntry(route: MangiaPage, root: string, indent: string = ' 
   }
 
   if (route.children?.length) {
-    const childEntries = route.children.map(c => generateRouteEntry(c, root, indent + '  '))
+    const childEntries = route.children.flatMap(c => generateRouteEntry(c, root, indent + '  '))
     parts.push(`children: [\n${childEntries.join(',\n')}\n${indent}]`)
   }
 
-  return `${indent}{ ${parts.join(', ')} }`
+  entries.push(`${indent}{ ${parts.join(', ')} }`)
+
+  return entries
 }
 
 function generateRoutesCode(
@@ -128,7 +150,7 @@ function generateRoutesCode(
   errorFile?: string,
   srcDir?: string,
 ): string {
-  const routeEntries = routes.map(r => generateRouteEntry(r, root))
+  const routeEntries = routes.flatMap(r => generateRouteEntry(r, root))
 
   const wildcard = hasErrorComponent && errorFile
     ? `\n{ path: '**', loadComponent: () => import('/${relative(root, errorFile)}').then(m => resolveComponent(m, '/${srcDir}/error')) },`
@@ -154,10 +176,14 @@ function generateRoutesCode(
   },${wildcard}`
     : `${routeEntries.join(',\n')},${wildcard}`
 
-  return [
+  const header = [
     "import { ɵNG_COMP_DEF as NG_COMP_DEF } from '@angular/core';",
     "import { Component } from '@angular/core';",
-    "import { RouterLink } from '@angular/router';",
+    "import { RouterLink, RouterOutlet, UrlSegment } from '@angular/router';",
+  ]
+
+  return [
+    ...header,
     '',
     'function resolveComponent(m, path) {',
     '  const isComponent = (v) => typeof v === \'function\' && v[NG_COMP_DEF];',

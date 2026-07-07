@@ -82,6 +82,7 @@ export interface MangiaPage {
   data?: Record<string, unknown>
   alias?: string[]
   redirect?: string
+  matcherCode?: string
 }
 
 export interface MangiaAppConfigInput {

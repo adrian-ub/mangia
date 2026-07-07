@@ -50,6 +50,10 @@ export function extendPages(pages: MangiaPage[], cb: (pages: MangiaPage[]) => Ma
   return result ?? pages
 }
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 interface IntermediateRoute {
   name: string
   path: string
@@ -58,6 +62,8 @@ interface IntermediateRoute {
   groups: string[]
   catchAllParam?: string
   scoreSegments?: number[]
+  needsMatcher?: boolean
+  matcherSegments?: any[][]
 }
 
 function flattenTree(tree: any): any[] {
@@ -71,6 +77,7 @@ function flattenTree(tree: any): any[] {
       if (!group) { group = []; byGroupPath.set(key, group) }
       group.push(f)
     }
+    const allFilesAtNode = node.files || []
     for (const [, groupFiles] of byGroupPath) {
       const primary = groupFiles[0]
       const segments: any[] = []
@@ -94,7 +101,11 @@ function isIndexSegment(tokens: any[]): boolean {
   return tokens.length === 1 && tokens[0].type === 'static' && tokens[0].value === ''
 }
 
-function toAngularSegment(tokens: any[]): { segment: string; catchAllParam?: string } {
+function toAngularSegment(tokens: any[]): { segment: string; catchAllParam?: string; needsMatcher?: boolean } {
+  const nonGroup = tokens.filter((t: any) => t.type !== 'group')
+  const hasVar = nonGroup.some((t: any) => t.type === 'dynamic' || t.type === 'optional')
+  const needsMatcher = hasVar && nonGroup.length > 1
+
   let out = ''
   let catchAllParam: string | undefined
   for (const token of tokens) {
@@ -102,7 +113,7 @@ function toAngularSegment(tokens: any[]): { segment: string; catchAllParam?: str
       case 'group': continue
       case 'static': out += token.value; break
       case 'dynamic': out += `:${token.value}`; break
-      case 'optional': out += `:${token.value}`; break
+      case 'optional': out += `:${token.value}?`; break
       case 'catchall':
       case 'repeatable':
       case 'optional-repeatable':
@@ -111,7 +122,7 @@ function toAngularSegment(tokens: any[]): { segment: string; catchAllParam?: str
         break
     }
   }
-  return { segment: out, catchAllParam }
+  return { segment: out, catchAllParam, needsMatcher }
 }
 
 function toAngularRouter(tree: any): MangiaPage[] {
@@ -143,8 +154,9 @@ function toAngularRouter(tree: any): MangiaPage[] {
 
       route.name += (route.name && '/') + segmentName
 
-      const { segment: angularSegment, catchAllParam } = toAngularSegment(seg)
+      const { segment: angularSegment, catchAllParam, needsMatcher } = toAngularSegment(seg)
       if (catchAllParam) route.catchAllParam = catchAllParam
+      if (needsMatcher) route.needsMatcher = true
 
       const routePath = isIndex ? '' : `/${angularSegment}`
       const fullPath = (route.path || '/') + (isIndex ? '' : routePath)
@@ -161,6 +173,10 @@ function toAngularRouter(tree: any): MangiaPage[] {
       }
     }
 
+    if (route.needsMatcher) {
+      route.matcherSegments = info.segments.filter((seg: any[]) => !isIndexSegment(seg))
+    }
+
     parent.push(route)
   }
 
@@ -171,8 +187,67 @@ function computeScoreSegments(route: IntermediateRoute): number[] {
   return route.path.split('/').filter(Boolean).map((part) => {
     if (part === '**') return -400
     if (part.startsWith(':')) return 300
+    if (part.includes(':')) return 250
     return 400
   })
+}
+
+function generateMatcherCode(route: IntermediateRoute): string {
+  const segments = route.matcherSegments || []
+  const totalSegments = segments.length
+
+  const captureList: Array<{ name: string; regexIdx: number; groupIdx: number }> = []
+  const patternInfo: Array<{ regex: string | null; hasDynamic: boolean }> = []
+
+  for (const segTokens of segments) {
+    const nonGroup = segTokens.filter((t: any) => t.type !== 'group')
+    const hasDynamic = nonGroup.some((t: any) => t.type === 'dynamic' || t.type === 'optional')
+
+    if (!hasDynamic) {
+      const literal = nonGroup.map((t: any) => t.value).join('')
+      patternInfo.push({ regex: `^${escapeRegex(literal)}$`, hasDynamic: false })
+    } else if (nonGroup.length === 1 && nonGroup[0].type === 'dynamic') {
+      patternInfo.push({ regex: null, hasDynamic: true })
+      captureList.push({ name: nonGroup[0].value, regexIdx: patternInfo.length - 1, groupIdx: 0 })
+    } else if (nonGroup.length === 1 && nonGroup[0].type === 'optional') {
+      patternInfo.push({ regex: null, hasDynamic: true })
+      captureList.push({ name: nonGroup[0].value, regexIdx: patternInfo.length - 1, groupIdx: 0 })
+    } else {
+      let re = '^'
+      let groupIdx = 0
+      for (const t of nonGroup) {
+        if (t.type === 'static') {
+          re += escapeRegex(t.value)
+        } else if (t.type === 'dynamic' || t.type === 'optional') {
+          re += t.type === 'optional' ? '([^/]*)' : '([^/]+)'
+          groupIdx++
+          captureList.push({ name: t.value, regexIdx: patternInfo.length, groupIdx })
+        }
+      }
+      re += '$'
+      patternInfo.push({ regex: re, hasDynamic: true })
+    }
+  }
+
+  const checks: string[] = [`if(segments.length<${totalSegments})return null`]
+  for (let i = 0; i < totalSegments; i++) {
+    if (patternInfo[i]?.regex) {
+      checks.push(`const m${i}=segments[${i}].path.match(/${patternInfo[i].regex!.replace(/\//g, '\\/')}/)`)
+      checks.push(`if(!m${i})return null`)
+    }
+  }
+
+  const posParams: string[] = []
+  for (const cap of captureList) {
+    const ri = cap.regexIdx
+    if (patternInfo[ri]?.regex) {
+      posParams.push(`${cap.name}:new UrlSegment(m${ri}[${cap.groupIdx}],{})`)
+    } else {
+      posParams.push(`${cap.name}:segments[${ri}]`)
+    }
+  }
+
+  return `function(segments){${checks.join(';')};return{consumed:segments.slice(0,${totalSegments}),posParams:{${posParams.join(',')}}}}`
 }
 
 function prepareRoutes(routes: IntermediateRoute[], parent?: IntermediateRoute): MangiaPage[] {
@@ -207,6 +282,7 @@ function prepareRoutes(routes: IntermediateRoute[], parent?: IntermediateRoute):
     if (name) out.name = name
     if (route.groups.length > 0) out.meta = { ...out.meta, groups: route.groups }
     if (route.catchAllParam) out.data = { ...out.data, _catchAllParam: route.catchAllParam }
+    if (route.needsMatcher) out.matcherCode = generateMatcherCode(route)
     if (children.length > 0) out.children = children
 
     return out
