@@ -15,8 +15,17 @@ const DEFAULT_CONFIG: Partial<MangiaConfig> = {
   srcDir: 'app',
 }
 
+function pathsEqual(a: string, b: string): boolean {
+  const resolvedA = resolve(a)
+  const resolvedB = resolve(b)
+  if (process.platform === 'win32')
+    return resolvedA.toLowerCase() === resolvedB.toLowerCase()
+  return resolvedA === resolvedB
+}
+
 export async function loadMangiaConfig(options: LoadMangiaConfigOptions = {}): Promise<MangiaConfig> {
   const rootDir = options.rootDir ?? process.cwd()
+  const normalizedRoot = resolve(rootDir)
 
   const localLayerDirs = await glob('layers/*', { onlyDirectories: true, cwd: rootDir })
   const localLayers = localLayerDirs
@@ -41,7 +50,7 @@ export async function loadMangiaConfig(options: LoadMangiaConfigOptions = {}): P
         continue
       processedDirs.add(cwd)
 
-      if (cwd === rootDir)
+      if (pathsEqual(cwd, normalizedRoot))
         continue
 
       resolvedLayers.push({
@@ -56,7 +65,7 @@ export async function loadMangiaConfig(options: LoadMangiaConfigOptions = {}): P
   config!._layers = [
     {
       config: config!,
-      cwd: rootDir,
+      cwd: normalizedRoot,
     },
     ...resolvedLayers,
   ]
