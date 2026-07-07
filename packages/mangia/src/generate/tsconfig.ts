@@ -69,8 +69,6 @@ export function generateAppTsConfig(
       isolatedModules: true,
       lib: ['ES2022', 'DOM'],
       types: ['node'],
-      baseUrl: '.',
-      rootDir: rel(buildDir, rootDir),
       paths,
       outDir: rel(buildDir, resolve(rootDir, 'out-tsc/app')),
     },
@@ -108,8 +106,6 @@ export function generateNodeTsConfig(
       isolatedModules: true,
       lib: ['ES2022'],
       types: ['node'],
-      baseUrl: '.',
-      rootDir: rel(buildDir, rootDir),
     },
     include: [
       rel(buildDir, resolve(rootDir, 'mangia.config.ts')),
@@ -135,8 +131,6 @@ export function generateServerTsConfig(
       isolatedModules: true,
       lib: ['ES2022'],
       types: ['node'],
-      baseUrl: '.',
-      rootDir: rel(buildDir, rootDir),
     },
     include: [
       `${rel(buildDir, resolve(rootDir, 'server'))}/**/*.ts`,
@@ -160,8 +154,6 @@ export function generateSharedTsConfig(
       skipLibCheck: true,
       isolatedModules: true,
       lib: ['ES2022'],
-      baseUrl: '.',
-      rootDir: rel(buildDir, rootDir),
     },
     include: [
       `${rel(buildDir, resolve(rootDir, 'shared'))}/**/*.ts`,

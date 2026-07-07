@@ -17,15 +17,15 @@ declare module 'virtual:mangia/pages.ts' {
   export const routes: Routes
 }
 
-declare module 'virtual:mangia/ng-core' {
+declare module 'virtual:mangia/ng-compiler' {
   export { publishFacade } from '@angular/compiler'
 }
 
-declare module 'virtual:mangia/ng-platform-browser' {
+declare module 'virtual:mangia/ng-core' {
   export { mergeApplicationConfig, reflectComponentType } from '@angular/core'
 }
 
-declare module 'virtual:mangia/ng-compiler' {
+declare module 'virtual:mangia/ng-platform-browser' {
   export { bootstrapApplication } from '@angular/platform-browser'
 }
 
