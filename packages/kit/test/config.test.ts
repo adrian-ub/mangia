@@ -1,12 +1,12 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import { loadMangiaConfig } from '../src/config'
 
 async function withTempDir(fn: (dir: string) => Promise<void>) {
-  const dir = mkdtempSync(join(tmpdir(), 'mangia-test-'))
+  const dir = mkdtempSync(resolve(tmpdir(), 'mangia-test-'))
   try {
     await fn(dir)
   }
@@ -29,7 +29,7 @@ describe('loadMangiaConfig', () => {
   it('should load config from mangia.config.ts', async () => {
     await withTempDir(async (dir) => {
       writeFileSync(
-        join(dir, 'mangia.config.ts'),
+        resolve(dir, 'mangia.config.ts'),
         'export default { srcDir: "src" }',
       )
 
@@ -41,10 +41,10 @@ describe('loadMangiaConfig', () => {
 
   it('should discover layers from layers/* directory', async () => {
     await withTempDir(async (dir) => {
-      const layerDir = join(dir, 'layers', 'base')
+      const layerDir = resolve(dir, 'layers', 'base')
       mkdirSync(layerDir, { recursive: true })
       writeFileSync(
-        join(layerDir, 'mangia.config.ts'),
+        resolve(layerDir, 'mangia.config.ts'),
         'export default { srcDir: "layer-src" }',
       )
 
@@ -60,7 +60,7 @@ describe('loadMangiaConfig', () => {
   it('should merge overrides on top of config', async () => {
     await withTempDir(async (dir) => {
       writeFileSync(
-        join(dir, 'mangia.config.ts'),
+        resolve(dir, 'mangia.config.ts'),
         'export default { css: ["/style.css"] }',
       )
 
