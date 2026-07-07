@@ -20,7 +20,8 @@
   "files": ["dist", "src/app"],
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch"
+    "dev": "tsdown --watch",
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@mangia/cli": "workspace:*",
