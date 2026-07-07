@@ -49,6 +49,11 @@ declare module '@oxc-angular/vite' {
   export default _default
 }
 
+declare module '*?url' {
+  const url: string
+  export default url
+}
+
 declare module '*?assets=client' {
   interface Asset { href: string }
   const assets: { js: Asset[], css: Asset[], merge: (other: typeof assets) => typeof assets }

@@ -23,8 +23,10 @@
     "@angular/compiler-cli": "^21.2.9",
     "@mangia/cli": "workspace:*",
     "@oxc-angular/vite": "^0.0.28",
+    "@tailwindcss/vite": "^4.3.2",
     "mangia": "workspace:*",
     "nitro": "3.0.260610-beta",
+    "tailwindcss": "^4.3.2",
     "typescript": "~5.9.3",
     "vite": "^8.0.0"
   }

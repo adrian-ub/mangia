@@ -1,3 +1,5 @@
+import type { UserConfig } from 'vite'
+
 export interface MangiaConfig {
   srcDir?: string
   app?: MangiaAppConfig
@@ -7,6 +9,7 @@ export interface MangiaConfig {
   typescript?: MangiaTypeScriptConfig
   extends?: (string | MangiaLayerConfig)[]
   _layers?: MangiaConfigLayer[]
+  vite?: UserConfig
 }
 
 export interface MangiaLayerConfig {

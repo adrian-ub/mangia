@@ -1,6 +1,6 @@
 import type { MangiaHead } from '@mangia/schema'
 import { existsSync } from 'node:fs'
-import { relative, resolve } from 'pathe'
+import { resolve } from 'pathe'
 
 export function generateAppConfig(rootDir: string, srcDir: string, head?: MangiaHead): string {
   const srcAppConfigPath = resolve(rootDir, srcDir, 'app.config.ts')
@@ -55,11 +55,8 @@ export function generateAppConfig(rootDir: string, srcDir: string, head?: Mangia
 export function generateRootComponent(
   appComponent: string,
   css: string[],
-  rootDir: string,
-  srcDir: string,
-  buildDir: string,
 ): string {
-  const cssImports = css.map(f => `import '${relative(buildDir, resolve(rootDir, f.replace(/^~\//, `${srcDir}/`)))}';`).join('\n')
+  const cssImports = css.map(f => `import '${f}';`).join('\n')
 
   return [
     `import * as __module from '/${appComponent}';`,

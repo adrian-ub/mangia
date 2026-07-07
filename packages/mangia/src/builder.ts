@@ -59,6 +59,10 @@ export async function buildPlugins(
     console.warn('[mangia] @oxc-angular/vite not found — skipping')
   }
 
+  if (config.vite?.plugins) {
+    plugins.push(...config.vite.plugins.filter(Boolean) as Plugin[])
+  }
+
   return plugins
 }
 

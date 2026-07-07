@@ -3,6 +3,7 @@ import { mergeApplicationConfig, reflectComponentType } from 'virtual:mangia/ng-
 import { bootstrapApplication } from 'virtual:mangia/ng-platform-browser'
 import { __rootComponent } from 'virtual:mangia/root-component'
 import clientAssets from './entry-client?assets=client'
+import clientEntryUrl from './entry-client?url'
 
 // eslint-disable-next-line antfu/no-top-level-await
 const { renderApplication, ɵSERVER_CONTEXT } = await import('virtual:mangia/ng-platform-server')
@@ -21,10 +22,11 @@ const config = mergeApplicationConfig(appConfig, {
 const bootstrap = (context: any) => bootstrapApplication(__rootComponent, config, context)
 
 function htmlTemplate() {
-  const scripts = clientAssets.js.map((a: any) => `<script src="${a.href}" type="module"></script>`).join('')
-  const styles = clientAssets.css.map((a: any) => `<link rel="stylesheet" href="${a.href}">`).join('')
   const title = head?.title ? `<title>${head.title}</title>` : ''
-  return `<!DOCTYPE html><html><head>${title}${styles}</head><body><${__selector}></${__selector}>${scripts}</body></html>`
+  const styles = clientAssets.css.map((a: any) => `<link rel="stylesheet" href="${a.href}">`).join('')
+  const scriptSrc = clientAssets.js.length > 0 ? clientAssets.js[0]!.href : clientEntryUrl
+  const script = `<script src="${scriptSrc}" type="module"></script>`
+  return `<!DOCTYPE html><html><head>${title}${styles}</head><body><${__selector}></${__selector}>${script}</body></html>`
 }
 
 export default {

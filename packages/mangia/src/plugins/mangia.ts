@@ -3,7 +3,7 @@ import type { Hookable } from 'hookable'
 import type { Plugin } from '../types'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { basename, join, resolve } from 'pathe'
+import { basename, join, relative, resolve } from 'pathe'
 import {
   generateAppDeclarations,
   generateNodeDeclarations,
@@ -92,6 +92,8 @@ export function mangiaPlugin(
       writeFileSync(join(buildDir, 'types', 'server.d.ts'), generateServerDeclarations())
       writeFileSync(join(buildDir, 'types', 'shared.d.ts'), generateSharedDeclarations())
 
+      const { plugins: _vitePlugins, ...userVite } = config.vite ?? {}
+
       return {
         resolve: {
           alias: aliases,
@@ -112,6 +114,7 @@ export function mangiaPlugin(
             },
           },
         },
+        ...userVite,
       }
     },
 
@@ -128,10 +131,23 @@ export function mangiaPlugin(
       if (id === RESOLVED_APP_CONFIG)
         return generateAppConfig(rootDir, srcDir, config.app?.head)
       if (id === RESOLVED_ROOT_COMPONENT)
-        return generateRootComponent(appComponent, cssFiles, rootDir, srcDir, buildDir)
+        return generateRootComponent(appComponent, cssFiles)
       for (const [virtual, resolved] of Object.entries(RESOLVED_ANGULAR_VIRTUALS)) {
         if (id === resolved)
           return ANGULAR_VIRTUALS[virtual]
+      }
+    },
+
+    transform(code: string, id: string) {
+      const entryPath = resolve(_entryDir, 'entry-client.ts')
+      const cleanId = id.split('?')[0]
+      if (cleanId === entryPath && cssFiles.length > 0) {
+        const cssImports = cssFiles.map((f) => {
+          const resolvedPath = resolve(rootDir, f.replace(/^~\//, `${srcDir}/`))
+          const relPath = relative(rootDir, resolvedPath)
+          return `import '/${relPath}';`
+        }).join('\n')
+        return { code: `${cssImports}\n${code}`, map: null }
       }
     },
   }
