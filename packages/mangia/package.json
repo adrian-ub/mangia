@@ -13,6 +13,11 @@
       "types": "./dist/config.d.mts",
       "import": "./dist/config.mjs",
       "default": "./dist/config.mjs"
+    },
+    "./unhead": {
+      "types": "./dist/unhead.d.mts",
+      "import": "./dist/unhead.mjs",
+      "default": "./dist/unhead.mjs"
     }
   },
   "main": "./dist/index.mjs",
@@ -28,6 +33,7 @@
     "@mangia/cli": "workspace:*",
     "@mangia/kit": "workspace:*",
     "@mangia/schema": "workspace:*",
+    "@unhead/angular": "^3.1.0",
     "hookable": "^6.1.1",
     "pathe": "^2.0.3"
   }

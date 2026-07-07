@@ -129,7 +129,7 @@ export function mangiaPlugin(
 
     load(id: string) {
       if (id === RESOLVED_APP_CONFIG)
-        return generateAppConfig(rootDir, srcDir, config.app?.head)
+        return generateAppConfig(rootDir, srcDir, config.app?.head, cssFiles)
       if (id === RESOLVED_ROOT_COMPONENT)
         return generateRootComponent(appComponent, cssFiles)
       for (const [virtual, resolved] of Object.entries(RESOLVED_ANGULAR_VIRTUALS)) {

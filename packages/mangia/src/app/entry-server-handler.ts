@@ -9,6 +9,8 @@ import clientEntryUrl from './entry-client?url'
 const { renderApplication, ɵSERVER_CONTEXT } = await import('virtual:mangia/ng-platform-server')
 // eslint-disable-next-line antfu/no-top-level-await
 const { provideServerRendering } = await import('virtual:mangia/ng-ssr')
+// eslint-disable-next-line antfu/no-top-level-await
+const { provideServerHead } = await import('@unhead/angular/server')
 
 const __selector = reflectComponentType(__rootComponent)?.selector ?? 'app-root'
 
@@ -16,17 +18,20 @@ const config = mergeApplicationConfig(appConfig, {
   providers: [
     { provide: ɵSERVER_CONTEXT, useValue: 'ssr-mangia' },
     provideServerRendering(),
+    provideServerHead({ init: [head] }),
   ],
 })
 
 const bootstrap = (context: any) => bootstrapApplication(__rootComponent, config, context)
 
 function htmlTemplate() {
-  const title = head?.title ? `<title>${head.title}</title>` : ''
-  const styles = clientAssets.css.map((a: any) => `<link rel="stylesheet" href="${a.href}">`).join('')
+  const productionCss = clientAssets.css.length > 0
+  const styles = productionCss
+    ? clientAssets.css.map((a: any) => `<link rel="stylesheet" href="${a.href}">`).join('')
+    : (head?.link || []).filter((l: any) => l.rel === 'stylesheet').map((l: any) => `<link rel="stylesheet" href="${l.href}">`).join('')
   const scriptSrc = clientAssets.js.length > 0 ? clientAssets.js[0]!.href : clientEntryUrl
   const script = `<script src="${scriptSrc}" type="module"></script>`
-  return `<!DOCTYPE html><html><head>${title}${styles}</head><body><${__selector}></${__selector}>${script}</body></html>`
+  return `<!DOCTYPE html><html><head>${styles}</head><body><${__selector}></${__selector}>${script}</body></html>`
 }
 
 export default {

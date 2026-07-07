@@ -5,6 +5,11 @@ export default defineMangiaConfig({
   app: {
     head: {
       title: 'Mangia + Angular',
+      htmlAttrs: { lang: 'en' },
+      meta: [
+        { name: 'description', content: 'Mangia — Angular SSR framework powered by Vite & Unhead' },
+        { name: 'keywords', content: 'angular, ssr, vite, unhead, tailwindcss' },
+      ],
     },
   },
   css: ['~/app.css'],

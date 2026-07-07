@@ -2,12 +2,17 @@ import type { MangiaHead } from '@mangia/schema'
 import { existsSync } from 'node:fs'
 import { resolve } from 'pathe'
 
-export function generateAppConfig(rootDir: string, srcDir: string, head?: MangiaHead): string {
+export function generateAppConfig(rootDir: string, srcDir: string, head?: MangiaHead, cssFiles?: string[]): string {
   const srcAppConfigPath = resolve(rootDir, srcDir, 'app.config.ts')
   const hasUserConfig = existsSync(srcAppConfigPath)
 
   const withHead = (code: string) => {
-    const headJson = JSON.stringify(head ?? {})
+    const cssLinks = (cssFiles || []).map(f => ({
+      rel: 'stylesheet',
+      href: `/${f.replace(/^~\//, `${srcDir}/`)}`,
+    }))
+    const mergedHead = { ...head, link: [...(head?.link || []), ...cssLinks] }
+    const headJson = JSON.stringify(mergedHead)
     return `${code}\n\nexport const head = ${headJson};`
   }
 
